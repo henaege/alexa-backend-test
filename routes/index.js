@@ -61,7 +61,9 @@ router.get('/categorylist', (req, res)=>{
   var categoryQuery = `SELECT * FROM categories;`
   conection.query(categoryQuery, (error, results)=>{
     if (error) {
-      throw error
+      res.json({
+        msg: "error"
+      })
     } else {
       res.json({
         categories: results
