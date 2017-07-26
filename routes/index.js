@@ -95,8 +95,9 @@ router.post('/grouplist', (req, res)=> {
 
 router.get('/test/:email', (req, res)=>{
   var email = req.params.email
-  insertQuery = `INSERT INTO users (email) VALUES (email);`
-  connection.query(insertQuery, (error, results)=>{
+  console.log(email)
+  insertQuery = `INSERT INTO users (email) VALUES (?);`
+  connection.query(insertQuery, [email], (error, results)=>{
     if (error) {
       throw error
     } else {
