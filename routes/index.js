@@ -56,7 +56,6 @@ router.post('/register', (req, res)=>{
 })
 
 router.get('/categorylist', (req, res)=>{
-  var email = req.body.email
 
   var categoryQuery = `SELECT * FROM categories;`
   conection.query(categoryQuery, (error, results)=>{
@@ -72,7 +71,7 @@ router.get('/categorylist', (req, res)=>{
   })
 })
 
-router.get('/grouplist', (req, res)=> {
+router.post('/grouplist', (req, res)=> {
   var categoryName = req.body.categoryName
 
   var categoryIdQuery = `SELECT id FROM category WHERE categoryName = categoryName;`
@@ -94,8 +93,8 @@ router.get('/grouplist', (req, res)=> {
   })
 })
 
-router.post('/test', (req, res)=>{
-  var email = req.body.email
+router.get('/test/:email', (req, res)=>{
+  var email = req.params.email
   insertQuery = `INSERT INTO users (email) VALUES (email);`
   connection.query(insertQuery, (error, results)=>{
     if (error) {
