@@ -81,13 +81,14 @@ router.post('/habitslist', (req, res)=> {
     if (error) {
       throw error
     } else {
-      var groupQuery = `SELECT name FROM habits WHERE categoryID = ${results[0]};`
+      var groupQuery = `SELECT name FROM habits WHERE categoryID = ${results[0].id};`
       connection.query(groupQuery, (error2, results2)=>{
+        console.log(results2)
         if (error){
           throw error
         } else {
           res.json({
-            habitsList: results2[0].id
+            habitsList: results2
           })
         }
       })
