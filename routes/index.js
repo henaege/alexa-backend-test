@@ -75,7 +75,7 @@ router.get('/categorylist', (req, res)=>{
 router.post('/habitslist', (req, res)=> {
   var categoryName = req.body.categoryName
 
-  var categoryIdQuery = `SELECT id FROM category WHERE categoryName = categoryName;`
+  var categoryIdQuery = `SELECT id FROM category WHERE categoryName = ${categoryName};`
   connection.query(categoryIdQuery, (error, results)=>{
     if (error) {
       throw error
