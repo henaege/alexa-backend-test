@@ -71,7 +71,8 @@ router.get('/categorylist', (req, res)=>{
   })
 })
 
-router.post('/grouplist', (req, res)=> {
+
+router.post('/habitslist', (req, res)=> {
   var categoryName = req.body.categoryName
 
   var categoryIdQuery = `SELECT id FROM category WHERE categoryName = categoryName;`
@@ -79,18 +80,74 @@ router.post('/grouplist', (req, res)=> {
     if (error) {
       throw error
     } else {
-      var groupQuery = `SELECT habits FROM groups WHERE categoryID = ${results[0]};`
+      var groupQuery = `SELECT name FROM habits WHERE categoryID = ${results[0]};`
       connection.query(groupQuery, (error2, results2)=>{
         if (error){
           throw error
         } else {
           res.json({
-            groupList: results2
+            habitsList: results2
           })
         }
       })
     }
   })
+})
+
+router.post('/checkinMyHabit', (req, res)=> {
+  var email = req.body.email
+  var habitName = req.body.habitName
+
+  var checkinQuery = `UPDATE habits SET count = count + 1 WHERE email = ${email}AND name = ${habitName};`
+  var thePromise = new Promise((resolve, reject)=> {
+    connection.query(checkinQuery, (error, results)=>{
+    if (error){
+      res.json({
+        msg: error
+      })
+    } else {
+      res.json({
+        msg:"count updated"
+      })
+    }
+  })
+})
+thePromise.then(()=>{
+  var rankQuery = `SELECT count, email FROM habits WHERE name = ${habitName} ORDER BY count;`
+
+    connection.query(rankQuery, (error2, results2)=> {
+      if (error) {
+        res.json({
+          msg: error
+        })
+      } else {
+        var rank = 0
+        for (let i = 0; i < results2.length; i++){
+          if (results2[i].email == email){
+            rank = i + 1
+          
+          }
+        }
+        if (rank == 0) {
+          res.json({
+            msg: "rankNotFound"
+          })
+        } else {
+          res.json({
+            rank: rank
+          })
+        }
+        
+      }
+    })
+
+})
+.catch((error)=>{
+  res.json({
+    error: error
+  })
+})
+
 })
 
 router.get('/test/:email', (req, res)=>{
