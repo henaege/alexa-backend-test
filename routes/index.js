@@ -58,7 +58,7 @@ router.post('/register', (req, res)=>{
 router.get('/categorylist', (req, res)=>{
 
   var categoryQuery = `SELECT * FROM categories;`
-  conection.query(categoryQuery, (error, results)=>{
+  connection.query(categoryQuery, (error, results)=>{
     if (error) {
       res.json({
         msg: "error"
@@ -71,6 +71,42 @@ router.get('/categorylist', (req, res)=>{
   })
 })
 
+router.post('/joinAHabit', (req, res)=>{
+  var habitName = req.body.habitName
+  var email = req.body.email
+  var habitCount = 0
+  console.log(currTimeStamp)
+
+  // connection.query(`SELECT * FROM name WHERE name = '${habitName};`, (error, results)=>{
+  //   if (results.length == 0){
+
+  //   }
+  // })
+
+  var thePromise = new Promise((resolve, reject)=>{
+    connection.query(`SELECT name, COUNT(*) as count FROM addedHabits WHERE name = '${habitName}';`, (error2, results2)=>{
+      console.log(results2)
+      if(error2){
+        throw error2
+      } else {
+        habitCount = results2[0].count
+        resolve()
+      }
+    })
+  })
+  var joinHabitQuery = `INSERT INTO addedHabits (email, name, dateCreated, count, dateUpdated, rank) VALUES (?, ?, ?, ?, ?, ?);`
+
+  thePromise.then(()=>{connection.query(joinHabitQuery, [email, habitName, CURRENT_TIMESTAMP, 0, CURRENT_TIMESTAMP, habitCount], (error3, results3)=>{
+    if (error3){
+      throw error3
+    } else {
+      res.json({
+        msg: "addedHabit"
+      })
+    }
+  })
+})
+})
 
 router.post('/habitslist', (req, res)=> {
   var categoryName = req.body.categoryName
@@ -81,7 +117,7 @@ router.post('/habitslist', (req, res)=> {
     if (error) {
       throw error
     } else {
-      var groupQuery = `SELECT name FROM habits WHERE categoryID = ${results[0].id};`
+      var groupQuery = `SELECT habitName FROM habitsInfo WHERE categoryId = ${results[0].id};`
       connection.query(groupQuery, (error2, results2)=>{
         console.log(results2)
         if (error){
@@ -100,7 +136,8 @@ router.post('/checkinMyHabit', (req, res)=> {
   var email = req.body.email
   var habitName = req.body.habitName
 
-  var checkinQuery = `UPDATE habits SET count = count + 1 WHERE email = ${email}AND name = ${habitName};`
+
+  var checkinQuery = `UPDATE addedHabits SET count = count + 1, dateUpdated = CURRENT_TIMESTAMP WHERE email = '${email}' AND name = '${habitName}';`
   var thePromise = new Promise((resolve, reject)=> {
     connection.query(checkinQuery, (error, results)=>{
     if (error){
@@ -108,19 +145,17 @@ router.post('/checkinMyHabit', (req, res)=> {
         msg: error
       })
     } else {
-      res.json({
-        msg:"count updated"
-      })
+      resolve(results)
     }
   })
 })
 thePromise.then(()=>{
-  var rankQuery = `SELECT count, email FROM habits WHERE name = ${habitName} ORDER BY count;`
+  var rankQuery = `SELECT count, email FROM addedHabits WHERE name = '${habitName}' ORDER BY count;`
 
     connection.query(rankQuery, (error2, results2)=> {
-      if (error) {
+      if (error2) {
         res.json({
-          msg: error
+          msg: error2
         })
       } else {
         var rank = 0
@@ -135,8 +170,14 @@ thePromise.then(()=>{
             msg: "rankNotFound"
           })
         } else {
-          res.json({
+          connection.query(`UPDATE addedHabits SET rank = '${rank}' WHERE email = '${email}' AND name = '${habitName}';`, (error3, results3)=>{
+            if (error3){
+              throw error3
+            } else {
+              res.json({
             rank: rank
+          })
+            }
           })
         }
         
