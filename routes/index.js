@@ -87,7 +87,7 @@ router.post('/habitslist', (req, res)=> {
           throw error
         } else {
           res.json({
-            habitsList: results2
+            habitsList: results2[0].id
           })
         }
       })
