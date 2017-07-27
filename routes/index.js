@@ -75,13 +75,8 @@ router.post('/joinAHabit', (req, res)=>{
   var habitName = req.body.habitName
   var email = req.body.email
   var habitCount = 0
-  console.log(currTimeStamp)
 
-  // connection.query(`SELECT * FROM name WHERE name = '${habitName};`, (error, results)=>{
-  //   if (results.length == 0){
-
-  //   }
-  // })
+  
 
   var thePromise = new Promise((resolve, reject)=>{
     connection.query(`SELECT name, COUNT(*) as count FROM addedHabits WHERE name = '${habitName}';`, (error2, results2)=>{
@@ -89,14 +84,14 @@ router.post('/joinAHabit', (req, res)=>{
       if(error2){
         throw error2
       } else {
-        habitCount = results2[0].count
+        habitCount = results2[0].count + 1
         resolve()
       }
     })
   })
-  var joinHabitQuery = `INSERT INTO addedHabits (email, name, dateCreated, count, dateUpdated, rank) VALUES (?, ?, ?, ?, ?, ?);`
+  var joinHabitQuery = `INSERT INTO addedHabits (email, name, dateCreated, count, dateUpdated, rank) VALUES (?, ?, CURRENT_TIMESTAMP, ?, CURRENT_TIMESTAMP, ?);`
 
-  thePromise.then(()=>{connection.query(joinHabitQuery, [email, habitName, CURRENT_TIMESTAMP, 0, CURRENT_TIMESTAMP, habitCount], (error3, results3)=>{
+  thePromise.then(()=>{connection.query(joinHabitQuery, [email, habitName,  0,  habitCount], (error3, results3)=>{
     if (error3){
       throw error3
     } else {
