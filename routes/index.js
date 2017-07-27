@@ -57,7 +57,7 @@ router.post('/register', (req, res)=>{
 
 router.get('/categorylist', (req, res)=>{
 
-  var categoryQuery = `SELECT * FROM categories;`
+  var categoryQuery = `SELECT categoryName FROM categories;`
   connection.query(categoryQuery, (error, results)=>{
     if (error) {
       res.json({
