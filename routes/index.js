@@ -243,41 +243,31 @@ router.post('/getMyRank', (req, res)=>{
   var email = req.body.email
   var habitName = req.body.habitName
 
-  console.log(email)
-
-  var rankQuery = `SELECT rank FROM addedHabits WHERE email = ? AND name = ?;`
+  var rankQuery = `SELECT rank, count FROM addedHabits WHERE email = ? AND name = ?;`
 
   connection.query(rankQuery, [email, habitName], (error, results)=>{
     if (error){
-      throw error
+      throw error;
     } else {
-      res.json({
+      if(results.length > 0){
+        res.json({
+        count: results[0].count,
         rank: results[0].rank
-      })
+        })
+      }
+      else{
+        res.json("NoRank");
+      }
     }
   } )
 
-})
+});
 
-router.get('/test/:email', (req, res)=>{
-  var email = req.params.email
-  console.log(email)
-  insertQuery = `INSERT INTO users (email) VALUES (?);`
-  connection.query(insertQuery, [email], (error, results)=>{
-    if (error) {
-      throw error
-    } else {
-      res.json({
-        msg: "email success"
-      })
-    }
-  })
-})
 
 router.post('/leaveHabit', (req, res)=>{
   var email = req.body.email
   var habitName = req.body.habitName
-
+  var thePromise;
   var aPromise = new Promise((resolve, reject)=>{
     connection.query(`SELECT name FROM addedHabits WHERE email = ?;`, [email],(error1, resp)=>{
       console.log(resp)
@@ -299,37 +289,40 @@ router.post('/leaveHabit', (req, res)=>{
 
   aPromise.then(()=>{
     var leaveHabitQuery = `DELETE FROM addedHabits WHERE email = ? AND name = ?;`
-
-  var thePromise = new Promise((resolve, reject)=>{
-    connection.query(leaveHabitQuery, [email, habitName], (error, response)=>{
-    if (error) {
-      throw error
-    } else {
-      resolve()
-      console.log('removed habit')
-    }
+    thePromise = new Promise((resolve, reject)=>{
+      connection.query(leaveHabitQuery, [email, habitName], (error, response)=>{
+        if (error) {
+          throw error
+        } else {
+          resolve()
+          console.log('removed habit')
+        }
+      })
+    });
+    thePromise.then(()=>{
+    var remainingQuery = `SELECT name FROM addedHabits WHERE email = ?;`
+    connection.query(remainingQuery,[email],(error2, response2)=>{
+      console.log(response2)
+      if (error2){
+        res.json({
+          msg: 'error'
+        })
+      } else{
+        res.json({
+          msg: "leftGroup",
+          habitListResponse: response2[0]
+        })
+      }
+    })
   })
-})
-  }).catch((error)=>{
-    res.json(error)
+  .catch((error)=>{
+    res.json(error);
+  })
+  })
+  .catch((error)=>{
+    res.json(error);
   })
   
-thePromise.then(()=>{
-  var remainingQuery = `SELECT name FROM addedHabits WHERE email = ?;`
-  connection.query(remainingQuery,[email],(error2, response2)=>{
-    console.log(response2)
-    if (error2){
-      res.json({
-        msg: 'error'
-      })
-    } else{
-      res.json({
-        msg: "leftGroup",
-        habitListResponse: response2[0]
-      })
-    }
-  })
-})
   
 })
 
