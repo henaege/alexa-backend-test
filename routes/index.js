@@ -211,6 +211,9 @@ thePromise.then(()=>{
 router.post('/getMyRank', (req, res)=>{
   var email = req.body.email
   var habitName = req.body.habitName
+
+  console.log(email)
+
   var rankQuery = `SELECT rank FROM addedHabits WHERE email = ? AND name = ?;`
 
   connection.query(rankQuery, [email, habitName], (error, results)=>{
