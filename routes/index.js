@@ -289,7 +289,7 @@ thePromise.then(()=>{
     } else{
       res.json({
         msg: "leftGroup",
-        response: response2[0]
+        habitListResponse: response2[0]
       })
     }
   })
