@@ -150,9 +150,23 @@ router.post('/habitslist', (req, res)=> {
 router.post('/checkinMyHabit', (req, res)=> {
   var email = req.body.email
   var habitName = req.body.habitName
+  var checkFrequency = 'SELECT * from updatedFrequency WHERE email = ? AND name = ?;'
 
-
-  var checkinQuery = `UPDATE addedHabits SET count = count + 1, dateUpdated = CURRENT_TIMESTAMP WHERE email = '${email}' AND name = '${habitName}';`
+  var aPromise = new Promise((resolve, reject)=>{
+    connection.query(checkFrequency, [email, habitName],(err, resp)=>{
+      if (err){
+        throw err
+      } else {
+        if (resp[0].updatedFrequency == 0){
+          reject("outOfFrequency")
+        } else {
+          resolve()
+        }
+      }
+    })
+  })
+  aPromise.then(()=>{
+    var checkinQuery = `UPDATE addedHabits SET count = count + 1, dateUpdated = CURRENT_TIMESTAMP WHERE email = '${email}' AND name = '${habitName}';`
   var thePromise = new Promise((resolve, reject)=> {
     connection.query(checkinQuery, (error, results)=>{
     if (error){
@@ -205,6 +219,14 @@ thePromise.then(()=>{
     error: error
   })
 })
+  })
+  .catch((error)=>{
+    res.json({error: error})
+  })
+  
+
+
+  
 
 })
 
