@@ -150,10 +150,11 @@ router.post('/habitslist', (req, res)=> {
 router.post('/checkinMyHabit', (req, res)=> {
   var email = req.body.email
   var habitName = req.body.habitName
-  var checkFrequency = 'SELECT * from updatedFrequency WHERE email = ? AND name = ?;'
+  var checkFrequency = 'SELECT updatedFrequency FROM addedHabits WHERE email = ? AND name = ?;'
 
   var aPromise = new Promise((resolve, reject)=>{
     connection.query(checkFrequency, [email, habitName],(err, resp)=>{
+      console.log(resp)
       if (err){
         throw err
       } else {
@@ -166,7 +167,7 @@ router.post('/checkinMyHabit', (req, res)=> {
     })
   })
   aPromise.then(()=>{
-    var checkinQuery = `UPDATE addedHabits SET count = count + 1, dateUpdated = CURRENT_TIMESTAMP WHERE email = '${email}' AND name = '${habitName}';`
+    var checkinQuery = `UPDATE addedHabits SET count = count + 1, updatedFrequency = updatedFrequency - 1, dateUpdated = CURRENT_TIMESTAMP WHERE email = '${email}' AND name = '${habitName}';`
   var thePromise = new Promise((resolve, reject)=> {
     connection.query(checkinQuery, (error, results)=>{
     if (error){
