@@ -188,6 +188,24 @@ thePromise.then(()=>{
 
 })
 
+router.get('/getMyRank', (req, res)=>{
+  var email = req.body.email
+  var habitName = req.body.habitName
+
+  var rankQuery = `SELECT rank FROM addedHabits WHERE email = ? AND name = ?;`
+
+  connection.query(rankQuery, [email, habitName], (error, results)=>{
+    if (error){
+      throw error
+    } else {
+      res.json({
+        rank: results[0].rank
+      })
+    }
+  } )
+
+})
+
 router.get('/test/:email', (req, res)=>{
   var email = req.params.email
   console.log(email)
