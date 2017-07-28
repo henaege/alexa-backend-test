@@ -266,4 +266,21 @@ router.get('/test/:email', (req, res)=>{
   })
 })
 
+router.post('/leaveHabit', (req, res)=>{
+  var email = req.body.email
+  var habitName = req.body.habitName
+
+  var leaveHabitQuery = `DELETE FROM addedHabits WHERE email = ? AND name = ?;`
+
+  connection.query(leaveHabitQuery, [email, habitName], (error, response)=>{
+    if (error) {
+      throw error
+    } else {
+      res.json({
+        msg: 'leftGroup'
+      })
+    }
+  })
+})
+
 module.exports = router;
