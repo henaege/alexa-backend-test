@@ -272,15 +272,29 @@ router.post('/leaveHabit', (req, res)=>{
 
   var leaveHabitQuery = `DELETE FROM addedHabits WHERE email = ? AND name = ?;`
 
-  connection.query(leaveHabitQuery, [email, habitName], (error, response)=>{
+  var thePromise = new Promise((resolve, reject)=>{
+    connection.query(leaveHabitQuery, [email, habitName], (error, response)=>{
     if (error) {
       throw error
     } else {
+      resolve()
+    }
+  })
+})
+thePromise.then(()=>{
+  var remainingQuery = `SELECT name FROM addedHabits WHERE email = ?;`
+  connection.query(remainingQuery,[email],(error2, response2)=>{
+    if (error2){
+      throw error2
+    } else{
       res.json({
-        msg: 'leftGroup'
+        msg: "leftGroup",
+        response: response2[0]
       })
     }
   })
+})
+  
 })
 
 module.exports = router;
