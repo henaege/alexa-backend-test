@@ -284,6 +284,7 @@ router.post('/leaveHabit', (req, res)=>{
 thePromise.then(()=>{
   var remainingQuery = `SELECT name FROM addedHabits WHERE email = ?;`
   connection.query(remainingQuery,[email],(error2, response2)=>{
+    console.log(response2)
     if (error2){
       throw error2
     } else{
