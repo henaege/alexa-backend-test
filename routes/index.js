@@ -14,6 +14,14 @@ var connection = mysql.createConnection({
 
 connection.connect()
 
+function containsObject(obj, list){
+  for (let i = 0; i < list.length; i++){
+    if (list[i] === obj){
+      return true
+    }
+  }
+}
+
 /* GET home page. */
 router.get('/', function(req, res, next) {
   res.render('index', { title: 'Express' });
@@ -270,7 +278,27 @@ router.post('/leaveHabit', (req, res)=>{
   var email = req.body.email
   var habitName = req.body.habitName
 
-  var leaveHabitQuery = `DELETE FROM addedHabits WHERE email = ? AND name = ?;`
+  var aPromise = new Promise((resolve, reject)=>{
+    connection.query(`SELECT name FROM addedHabits WHERE email = ?;`, [email],(error1, resp)=>{
+      console.log(resp)
+      if(error1){
+        throw error1
+      } else{
+        function findHabit(habit) {
+          return habit.name == habitName
+        }
+        console.log(resp.find(findHabit))
+        if(resp.find(findHabit) == undefined){
+          reject("noHabit")
+        } else {
+          resolve()
+        }
+      }
+    })
+  })
+
+  aPromise.then(()=>{
+    var leaveHabitQuery = `DELETE FROM addedHabits WHERE email = ? AND name = ?;`
 
   var thePromise = new Promise((resolve, reject)=>{
     connection.query(leaveHabitQuery, [email, habitName], (error, response)=>{
@@ -278,15 +306,22 @@ router.post('/leaveHabit', (req, res)=>{
       throw error
     } else {
       resolve()
+      console.log('removed habit')
     }
   })
 })
+  }).catch((error)=>{
+    res.json(error)
+  })
+  
 thePromise.then(()=>{
   var remainingQuery = `SELECT name FROM addedHabits WHERE email = ?;`
   connection.query(remainingQuery,[email],(error2, response2)=>{
     console.log(response2)
     if (error2){
-      throw error2
+      res.json({
+        msg: 'error'
+      })
     } else{
       res.json({
         msg: "leftGroup",
