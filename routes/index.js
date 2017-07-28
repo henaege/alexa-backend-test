@@ -109,7 +109,7 @@ router.post('/joinAHabit', (req, res)=>{
           throw error3
         } else {
           res.json({
-            msg: "addedHabit"
+            rank: habitCount
           })
         }
     })
