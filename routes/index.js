@@ -75,32 +75,52 @@ router.post('/joinAHabit', (req, res)=>{
   var habitName = req.body.habitName
   var email = req.body.email
   var habitCount = 0
-
-  
-
-  var thePromise = new Promise((resolve, reject)=>{
-    connection.query(`SELECT name, COUNT(*) as count FROM addedHabits WHERE name = '${habitName}';`, (error2, results2)=>{
-      console.log(results2)
-      if(error2){
-        throw error2
-      } else {
-        habitCount = results2[0].count + 1
+  var checkPromise = new Promise((resolve, reject)=>{
+    var checkQuery = 'SELECT * FROM addedHabits WHERE name = ? AND email = ?;';
+    connection.query(checkQuery, [habitName, email], (error1, results1)=>{
+      if(error1) throw error1;
+      console.log(results1);
+      if(results1.length > 0){
+        reject("existedUserHabit");
+      }else{
         resolve()
       }
     })
-  })
+  });
+  
+
+  
   var joinHabitQuery = `INSERT INTO addedHabits (email, name, dateCreated, count, dateUpdated, rank) VALUES (?, ?, CURRENT_TIMESTAMP, ?, CURRENT_TIMESTAMP, ?);`
 
-  thePromise.then(()=>{connection.query(joinHabitQuery, [email, habitName,  0,  habitCount], (error3, results3)=>{
-    if (error3){
-      throw error3
-    } else {
-      res.json({
-        msg: "addedHabit"
+  checkPromise.then(()=>{
+      var thePromise = new Promise((resolve, reject)=>{
+      connection.query(`SELECT name, COUNT(*) as count FROM addedHabits WHERE name = '${habitName}';`, (error2, results2)=>{
+        console.log(results2)
+        if(error2){
+          throw error2
+        } else {
+          habitCount = results2[0].count + 1
+          resolve()
+        }
       })
-    }
+    })
+    thePromise.then(()=>{connection.query(joinHabitQuery, [email, habitName,  0,  habitCount], (error3, results3)=>{
+        if (error3){
+          throw error3
+        } else {
+          res.json({
+            msg: "addedHabit"
+          })
+        }
+    })
   })
-})
+    .catch((error)=>{
+      res.json({msg: error});
+    })
+  })
+  .catch((error)=>{
+     res.json({msg: error});
+  })
 })
 
 router.post('/habitslist', (req, res)=> {
