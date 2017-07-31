@@ -1,9 +1,12 @@
 var express = require('express');
 var router = express.Router();
 var mysql = require('mysql')
-var config = require('../config/config')
-var bcrypt = require('bcrypt-nodejs')
-var randToken = require('rand-token')
+const bunyan = require('bunyan');
+const nodemailer = require('nodemailer');
+var bcrypt = require('bcrypt-nodejs');
+var randToken = require('rand-token');
+var config = require('../config/config');
+var sendEmail = require('../emailSending');
 
 var connection = mysql.createConnection({
   host: config.host,
@@ -14,13 +17,32 @@ var connection = mysql.createConnection({
 
 connection.connect()
 
-function containsObject(obj, list){
-  for (let i = 0; i < list.length; i++){
-    if (list[i] === obj){
-      return true
+function checkUpdatedDate(){
+  var dateUpdatedQuery = 'SELECT email, dateUpdated, name FROM addedHabits WHERE DATE_ADD(dateUpdated, INTERVAL 7 DAY) < CURRENT_TIMESTAMP AND notification = 1;'
+  var thePromise = new Promise((resolve, reject)=>{
+    connection.query(dateUpdatedQuery, (error, results)=>{
+    if(error) throw error;
+    if(results.length < 1){
+      reject('noUpdates')
+    }else{
+      resolve(results);
     }
-  }
-}
+  })})
+  return thePromise;
+};
+
+/* Check updated time and send notifiction every week */
+setInterval(()=>{
+  checkUpdatedDate()
+    .then((results)=>{
+      results.map((userInfo)=>{
+        sendEmail(userInfo);
+      })
+    })
+    .catch((error)=>{
+      console.log(error);
+    })
+}, 604800000)
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
@@ -155,7 +177,7 @@ router.post('/habitslist', (req, res)=> {
   })
 });
 
-router.post('/getMyHabitList', (req.res)=>{
+router.post('/getMyHabitList', (req,res)=>{
   var email = req.body.email;
   if(email.length <= 1){
     res.json({msg: 'InvalidEmail'});
@@ -174,13 +196,13 @@ router.post('/getMyHabitList', (req.res)=>{
 
 router.post('/manageNotification', (req, res)=>{
   var email = req.body.email;
-  var activeNotification = req.body.activeNotification;
+  var activeNotification = req.body.notification;
   if(activeNotification){
     var notificationStatus = 1;
   }else{
     var notificationStatus = 2;
   }
-  var manageNotificationQuery = 'UPDATE users SET notification = ? WHERE email = ?;';
+  var manageNotificationQuery = 'UPDATE addedHabits SET notification = ? WHERE email = ?;';
   connection.query(manageNotificationQuery, [notificationStatus ,email], (error, results)=>{
     if(error) {res.json({msg: 'notificationFailed'})};
     res.json({msg: 'notificationOn'});
