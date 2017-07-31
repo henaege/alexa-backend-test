@@ -132,8 +132,8 @@ router.post('/joinAHabit', (req, res)=>{
 })
 
 router.post('/habitslist', (req, res)=> {
-  var categoryName = req.body.categoryName
-  console.log(categoryName)
+  var categoryName = req.body.categoryName;
+  console.log(categoryName);
   var categoryIdQuery = `SELECT id FROM categories WHERE categoryName = '${categoryName}';`
   connection.query(categoryIdQuery, (error, results)=>{
     console.log(results)
@@ -153,6 +153,38 @@ router.post('/habitslist', (req, res)=> {
       })
     }
   })
+});
+
+router.post('/getMyHabitList', (req.res)=>{
+  var email = req.body.email;
+  if(email.length <= 1){
+    res.json({msg: 'InvalidEmail'});
+  }else{
+    var getListQuery = 'SELECT name FROM addedHabits WHERE email = ?;';
+    connection.query(getListQuery, (error, results)=>{
+    if(error) throw error;
+    if(results.length < 1){
+      res.json({msg: 'NoHabitJoined'})
+    }else{
+      res.json(results);
+    }
+  });
+  }
+});
+
+router.post('/manageNotification', (req, res)=>{
+  var email = req.body.email;
+  var activeNotification = req.body.activeNotification;
+  if(activeNotification){
+    var notificationStatus = 1;
+  }else{
+    var notificationStatus = 2;
+  }
+  var manageNotificationQuery = 'UPDATE users SET notification = ? WHERE email = ?;';
+  connection.query(manageNotificationQuery, [notificationStatus ,email], (error, results)=>{
+    if(error) {res.json({msg: 'notificationFailed'})};
+    res.json({msg: 'notificationOn'});
+  });
 })
 
 router.post('/checkinMyHabit', (req, res)=> {
@@ -162,7 +194,7 @@ router.post('/checkinMyHabit', (req, res)=> {
 
   var aPromise = new Promise((resolve, reject)=>{
     connection.query(checkFrequency, [email, habitName],(err, resp)=>{
-      console.log(resp)
+      console.log(resp);
       if (err){
         throw err
       } else {
